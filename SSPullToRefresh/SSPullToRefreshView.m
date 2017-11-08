@@ -150,6 +150,7 @@
 	}
 
 	self.contentView.frame = contentFrame;
+    [self adjustPullToRefreshDefaultInset];
 }
 
 
@@ -174,14 +175,31 @@
 
 		// Add to scroll view
 		[self.scrollView addSubview:self];
-
+        
 		// Semaphore is used to ensure only one animation plays at a time
 		_animationSemaphore = dispatch_semaphore_create(0);
 		dispatch_semaphore_signal(_animationSemaphore);
+        
+        if (@available(iOS 11.0, *)) {
+            self.scrollView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
+        }
 	}
 	return self;
 }
 
+- (void)adjustPullToRefreshDefaultInset
+{
+    UIEdgeInsets inset = self.scrollView.contentInset;
+    if (@available(iOS 11.0, *)) {
+        inset.top = 0;
+        
+        inset = self.scrollView.safeAreaInsets;
+    } else {
+        inset = self.scrollView.contentInset;
+    }
+    
+    self.defaultContentInset = inset;
+}
 
 #pragma mark - Loading
 
@@ -249,7 +267,7 @@
 - (void)_setContentInsetTop:(CGFloat)topInset {
 	self.topInset = topInset;
 
-	// Default to the scroll view's initial content inset
+    // Default to the scroll view's initial content inset
 	UIEdgeInsets inset = self.defaultContentInset;
 
 	// Add the top inset
